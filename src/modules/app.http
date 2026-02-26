@@ -6,15 +6,35 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "normal@test.com",
+  "email": "admin@test.com",
   "password": "123456"
 }
 
 ###
 
-@authToken = {{userLogin.response.body.access_token}}
+@accessToken = {{userLogin.response.body.access_token}}
+@refreshToken = {{userLogin.response.body.refresh_token}}
+@userId = {{userLogin.response.body.sub}}
 
 ### Protected
 # @name getUsers
 GET {{baseUrl}}/users
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{accessToken}}
+
+### Protected
+# @name getMe
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+
+### Refresh
+# @name refresh
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "refreshToken": "{{refreshToken}}"
+}
+
+### Guardar novo access token
+@accessToken = {{refresh.response.body.access_token}}

@@ -1,34 +1,49 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { PrismaService } from '@/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    private prisma: PrismaService,
     private jwtService: JwtService,
   ) { }
 
-  async validateUser(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
-
+  // Login: retorna access + refresh
+  async login(email: string, password: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
-
-    return user;
-  }
-
-  async login(email: string, password: string) {
-    const user = await this.validateUser(email, password);
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) throw new UnauthorizedException('Invalid credentials');
 
     const payload = { sub: user.id, role: user.role };
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
+    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+
+    // Armazena hash do refresh token no banco
+    const hashedRefresh = await bcrypt.hash(refresh_token, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken: hashedRefresh },
+    });
+
+    return { sub: user.id, access_token, refresh_token };
+  }
+
+  // Refresh: gera novo access token
+  async refresh(userId: string, refreshToken: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.refreshToken) throw new UnauthorizedException('Invalid refresh token');
+
+    const match = await bcrypt.compare(refreshToken, user.refreshToken);
+    if (!match) throw new UnauthorizedException('Invalid refresh token');
+
+    const payload = { sub: user.id, role: user.role };
+    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
+
+    return { access_token };
   }
 }
