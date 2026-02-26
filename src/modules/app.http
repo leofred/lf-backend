@@ -6,7 +6,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "rest@test.com",
+  "email": "normal@test.com",
   "password": "123456"
 }
 
