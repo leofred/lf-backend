@@ -3,7 +3,7 @@ import { AppController } from './modules/app.controller';
 import { AppService } from './modules/app.service';
 import { PrismaModule } from './prisma/prisma.module'
 import { UsersModule } from './modules/users/users.module';
-import { AuthModule } from './auth/auth.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [PrismaModule, UsersModule, AuthModule],

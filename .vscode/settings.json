@@ -1,0 +1,12 @@
+{
+  "rest-client.environmentVariables": {
+    "dev": {
+      "baseUrl": "http://localhost:3000",
+      "token": "my-secret-dev-token"
+    },
+    "prod": {
+      "baseUrl": "https://api.example.com",
+      "token": "my-secret-prod-token"
+    }
+  }
+}
