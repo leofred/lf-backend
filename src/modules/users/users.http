@@ -10,3 +10,13 @@ Content-Type: application/json
   "email": "normal@test.com",
   "password": "123456"
 }
+
+###
+# @name createUserInvalidEmail
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "email": "nao-e-email",
+  "password": "123456"
+}

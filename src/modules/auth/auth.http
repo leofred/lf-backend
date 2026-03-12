@@ -10,6 +10,16 @@ Content-Type: application/json
   "password": "123456"
 }
 
+### Login
+# @name userLoginInvalidEmail
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "teste",
+  "password": "123456"
+}
+
 ###
 
 @authToken = {{userLogin.response.body.access_token}}
@@ -17,3 +27,13 @@ Content-Type: application/json
 ### Get Users Protected
 GET {{baseUrl}}/users
 Authorization: Bearer {{authToken}}
+
+### Refresh
+# @name refreshInvalidBody
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "userId": "abc",
+  "refreshToken": 123
+}
