@@ -6,12 +6,11 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "rest@test.com",
+  "email": "normal@test.com",
   "password": "123456"
 }
 
-### Login
-# @name userLoginInvalidEmail
+### Login com email inválido
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
@@ -28,12 +27,28 @@ Content-Type: application/json
 GET {{baseUrl}}/users
 Authorization: Bearer {{authToken}}
 
-### Refresh
-# @name refreshInvalidBody
+### Refresh com body inválido
 POST {{baseUrl}}/auth/refresh
 Content-Type: application/json
 
 {
   "userId": "abc",
   "refreshToken": 123
+}
+
+### Refresh com body inválido
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "userId": "b9689d22-ab04-4902-8193-45bcec79a097",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiOTY4OWQyMi1hYjA0LTQ5MDItODE5My00NWJjZWM3OWEwOTciLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc3MzM0NTI0NiwiZXhwIjoxNzczOTUwMDQ2fQ.FG4REIn1ILiGgdBkijvM1HTnu0xtc3SWL9ftPkPVnps"
+}
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "userId": "b9689d22-ab04-4902-8193-45bcec79a097"
 }
