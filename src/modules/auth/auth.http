@@ -27,13 +27,13 @@ Content-Type: application/json
 GET {{baseUrl}}/users
 Authorization: Bearer {{authToken}}
 
-### Refresh com body inválido
+### Refresh
 POST {{baseUrl}}/auth/refresh
 Content-Type: application/json
 
 {
-  "userId": "abc",
-  "refreshToken": 123
+  "userId": "b9689d22-ab04-4902-8193-45bcec79a097",
+  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiOTY4OWQyMi1hYjA0LTQ5MDItODE5My00NWJjZWM3OWEwOTciLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc3MzM1Nzk3MCwiZXhwIjoxNzczOTYyNzcwfQ.Z0SNxwxIMTVXPi83MZecs8W2OzYgzq2Ie0SQAFYkxEc"
 }
 
 ### Refresh com body inválido
@@ -51,4 +51,53 @@ Content-Type: application/json
 
 {
   "userId": "b9689d22-ab04-4902-8193-45bcec79a097"
+}
+
+@baseUrl = http://localhost:3000
+
+### Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "normal@test.com",
+  "password": "123456"
+}
+
+###
+
+@userId = {{login.response.body.sub}}
+@refreshTokenA = {{login.response.body.refresh_token}}
+
+### Refresh with token A
+# @name refreshA
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "refreshToken": "{{refreshTokenA}}"
+}
+
+###
+
+@refreshTokenB = {{refreshA.response.body.refresh_token}}
+
+### Try again with old token A
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "refreshToken": "{{refreshTokenA}}"
+}
+
+### Refresh with token B
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "userId": "{{userId}}",
+  "refreshToken": "{{refreshTokenB}}"
 }
