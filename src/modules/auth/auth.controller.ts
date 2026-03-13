@@ -1,38 +1,37 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './jwt/jwt.guard';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { LoginDto, LogoutDto, RefreshTokenDto } from './dto'
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common'
+import { AuthService } from './auth.service'
+import { JwtAuthGuard } from './jwt/jwt.guard'
+import { CurrentUser } from './decorators/current-user.decorator'
+import { LoginDto } from './dto'
+import { UsersService } from '@/modules/users/users.service'
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('login')
   async login(@Body() body: LoginDto) {
-    return this.authService.login(body.email, body.password);
+    return this.authService.login(body.email, body.password)
   }
 
   @Post('refresh')
-  async refresh(@Body() body: RefreshTokenDto) {
-    return this.authService.refresh(body.userId, body.refreshToken);
+  @UseGuards(JwtAuthGuard)
+  async refresh(@CurrentUser('userId') userId: string) {
+    return this.authService.refresh(userId)
   }
 
   @Post('logout')
-  async logout(@Body() body: LogoutDto) {
-    return this.authService.logout(body.userId);
+  @UseGuards(JwtAuthGuard)
+  async logout(@CurrentUser('userId') userId: string) {
+    return this.authService.logout(userId)
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  me(@CurrentUser() user: unknown) {
-    return user;
+  async me(@CurrentUser('userId') userId: string) {
+    return this.usersService.findPublicById(userId)
   }
-
-  @Get('role')
-  @UseGuards(JwtAuthGuard)
-  role(@CurrentUser('role') role: string) {
-    return role;
-  }
-
 }

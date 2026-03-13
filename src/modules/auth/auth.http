@@ -1,7 +1,7 @@
 @baseUrl = http://localhost:3000
 
 ### Login
-# @name userLogin
+# @name login
 POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
@@ -10,22 +10,24 @@ Content-Type: application/json
   "password": "123456"
 }
 
-### Login com email inválido
-POST {{baseUrl}}/auth/login
-Content-Type: application/json
-
-{
-  "email": "teste",
-  "password": "123456"
-}
-
 ###
 
-@authToken = {{userLogin.response.body.access_token}}
+@accessToken = {{login.response.body.access_token}}
+
+### Me
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
+###
+
+### Refresh
+POST {{baseUrl}}/auth/refresh
+Authorization: Bearer {{accessToken}}
+###
 
 ### Get Users Protected
 GET {{baseUrl}}/users
-Authorization: Bearer {{authToken}}
+Authorization: Bearer {{accessToken}}
+###
 
 ### Refresh
 POST {{baseUrl}}/auth/refresh
@@ -35,25 +37,7 @@ Content-Type: application/json
   "userId": "b9689d22-ab04-4902-8193-45bcec79a097",
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiOTY4OWQyMi1hYjA0LTQ5MDItODE5My00NWJjZWM3OWEwOTciLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc3MzM1Nzk3MCwiZXhwIjoxNzczOTYyNzcwfQ.Z0SNxwxIMTVXPi83MZecs8W2OzYgzq2Ie0SQAFYkxEc"
 }
-
-### Refresh com body inválido
-POST {{baseUrl}}/auth/refresh
-Content-Type: application/json
-
-{
-  "userId": "b9689d22-ab04-4902-8193-45bcec79a097",
-  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJiOTY4OWQyMi1hYjA0LTQ5MDItODE5My00NWJjZWM3OWEwOTciLCJyb2xlIjoiVVNFUiIsImlhdCI6MTc3MzM0NTI0NiwiZXhwIjoxNzczOTUwMDQ2fQ.FG4REIn1ILiGgdBkijvM1HTnu0xtc3SWL9ftPkPVnps"
-}
-
-### Logout
-POST {{baseUrl}}/auth/logout
-Content-Type: application/json
-
-{
-  "userId": "b9689d22-ab04-4902-8193-45bcec79a097"
-}
-
-@baseUrl = http://localhost:3000
+###
 
 ### Login
 # @name login
@@ -84,6 +68,8 @@ Content-Type: application/json
 
 @refreshTokenB = {{refreshA.response.body.refresh_token}}
 
+###
+
 ### Try again with old token A
 POST {{baseUrl}}/auth/refresh
 Content-Type: application/json
@@ -93,6 +79,8 @@ Content-Type: application/json
   "refreshToken": "{{refreshTokenA}}"
 }
 
+###
+
 ### Refresh with token B
 POST {{baseUrl}}/auth/refresh
 Content-Type: application/json
@@ -101,3 +89,9 @@ Content-Type: application/json
   "userId": "{{userId}}",
   "refreshToken": "{{refreshTokenB}}"
 }
+
+###
+
+### Logout
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{accessToken}}

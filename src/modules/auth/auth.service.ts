@@ -2,14 +2,18 @@ import { Injectable, UnauthorizedException } from '@nestjs/common'
 import { PrismaService } from '@/prisma/prisma.service'
 import { JwtService } from '@nestjs/jwt'
 import * as bcrypt from 'bcrypt'
-import { createHash } from 'crypto'
+import { createHash, randomUUID } from 'crypto'
 
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
+
+  private hashRefreshToken(token: string) {
+    return createHash('sha256').update(token).digest('hex')
+  }
 
   // Login: retorna access + refresh
   async login(email: string, password: string) {
@@ -21,58 +25,60 @@ export class AuthService {
 
     const payload = { sub: user.id, role: user.role }
 
-    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
-    const refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' });
+    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' })
+    const refresh_token = this.jwtService.sign(
+      {
+        ...payload,
+        jti: randomUUID(),
+      },
+      { expiresIn: '7d' },
+    )
 
     // Armazena hash do refresh token no banco
-    const hashedRefresh = this.hashRefreshToken(refresh_token);
+    const hashedRefresh = this.hashRefreshToken(refresh_token)
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: { refreshToken: hashedRefresh },
-    });
+    })
 
     return { sub: user.id, access_token, refresh_token }
   }
 
   // Refresh: gera novo access token
-  async refresh(userId: string, refreshToken: string) {
+  async refresh(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     })
 
     if (!user || !user.refreshToken) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-
-    const hashedIncomingRefreshToken = this.hashRefreshToken(refreshToken);
-
-    const isRefreshTokenValid = hashedIncomingRefreshToken === user.refreshToken;
-
-    if (!isRefreshTokenValid) {
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException('Invalid refresh token')
     }
 
     const payload = { sub: user.id, role: user.role }
 
     const access_token = this.jwtService.sign(payload, { expiresIn: '15m' })
-    const new_refresh_token = this.jwtService.sign(payload, { expiresIn: '7d' })
+    const refresh_token = this.jwtService.sign(
+      {
+        ...payload,
+        jti: randomUUID(),
+      },
+      { expiresIn: '7d' },
+    )
 
-
-    const hashedRefreshToken = this.hashRefreshToken(new_refresh_token);
+    const hashedRefreshToken = this.hashRefreshToken(refresh_token)
 
     await this.prisma.user.update({
       where: { id: user.id },
       data: { refreshToken: hashedRefreshToken },
-    });
+    })
 
     return {
       sub: user.id,
       access_token,
-      refresh_token: new_refresh_token,
+      refresh_token: refresh_token,
     }
   }
-
 
   async logout(userId: string) {
     await this.prisma.user.update({
@@ -81,9 +87,5 @@ export class AuthService {
     })
 
     return { message: 'Logged out successfully' }
-  }
-
-  private hashRefreshToken(token: string) {
-    return createHash('sha256').update(token).digest('hex');
   }
 }
